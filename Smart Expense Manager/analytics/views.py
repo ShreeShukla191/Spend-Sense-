@@ -184,7 +184,9 @@ def export_pdf(request):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def records_view(request):
-    expenses = list(Expense.objects.filter(user=request.user).order_by('-date').values())
+    expenses = list(Expense.objects.filter(user=request.user).order_by('-date').values(
+        'id', 'amount', 'description', 'date', 'payment_mode', 'category__expense_type', 'category__main_category', 'category__sub_category'
+    ))
     incomes = list(Income.objects.filter(user=request.user).order_by('-date').values())
     return Response({'expenses': expenses, 'incomes': incomes})
 

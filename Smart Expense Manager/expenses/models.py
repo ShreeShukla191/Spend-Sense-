@@ -4,10 +4,11 @@ from django.utils import timezone
 
 class Category(models.Model):
     EXPENSE_TYPES = [
-        ('Personal', '1️⃣ Personal Expenses (Daily Needs)'),
-        ('Extra', '2️⃣ Extra Expenses (Lifestyle / Optional)'),
-        ('Saving', '3️⃣ Savings & Investments'),
-        ('Income', '4️⃣ Income Category'),
+        ('Food', 'Food'),
+        ('Travel', 'Travel'),
+        ('Shopping', 'Shopping'),
+        ('Bills', 'Bills'),
+        ('Others', 'Others'),
     ]
     expense_type = models.CharField(max_length=20, choices=EXPENSE_TYPES)
     main_category = models.CharField(max_length=100)
