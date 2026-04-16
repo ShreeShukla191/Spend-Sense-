@@ -123,6 +123,51 @@ class ApiService {
     }
   }
 
+  Future<dynamic> put(String endpoint, Map<String, dynamic> body) async {
+    try {
+      final headers = await _getHeaders();
+      final cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+      final response = await http.put(
+        Uri.parse('$baseUrl$cleanEndpoint'),
+        headers: headers,
+        body: jsonEncode(body),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return response.body.isEmpty ? null : jsonDecode(response.body);
+      } else if (response.statusCode == 401) {
+        await logout();
+        throw Exception('Unauthorized');
+      } else {
+        throw Exception('Failed to update data: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Network or API Error: $e');
+    }
+  }
+
+  Future<dynamic> delete(String endpoint) async {
+    try {
+      final headers = await _getHeaders();
+      final cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+      final response = await http.delete(
+        Uri.parse('$baseUrl$cleanEndpoint'),
+        headers: headers,
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return null;
+      } else if (response.statusCode == 401) {
+        await logout();
+        throw Exception('Unauthorized');
+      } else {
+        throw Exception('Failed to delete data: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Network or API Error: $e');
+    }
+  }
+
   Future<String?> register(String username, String email, String password) async {
     try {
       final response = await http.post(

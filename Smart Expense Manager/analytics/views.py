@@ -317,8 +317,42 @@ def spending_view(request):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
-def learning_hub(request):
-    return Response({"message": "Learning hub API is active. Provide localized content or video links here."})
+def learning_view(request):
+    modules = [
+        {
+            "id": 1,
+            "title": "Stock Market Fundamentals",
+            "description": "Learn the basics of investing, from understanding equities to reading market caps and dividends.",
+            "icon": "trending_up",
+            "difficulty": "Beginner",
+            "duration": "45 mins"
+        },
+        {
+            "id": 2,
+            "title": "Mastering Credit Scores",
+            "description": "Discover how credit bureaus calculate your score and learn strategies to boost it over 800.",
+            "icon": "credit_score",
+            "difficulty": "Intermediate",
+            "duration": "30 mins"
+        },
+        {
+            "id": 3,
+            "title": "The 50/30/20 Rule",
+            "description": "A deep dive into the ultimate budgeting formula for balancing needs, wants, and long-term savings.",
+            "icon": "pie_chart",
+            "difficulty": "Beginner",
+            "duration": "15 mins"
+        },
+        {
+            "id": 4,
+            "title": "Advanced Tax Optimization",
+            "description": "Explore complex tax loss harvesting, capital gains deferral, and strategic deductions.",
+            "icon": "account_balance",
+            "difficulty": "Advanced",
+            "duration": "1 hour"
+        }
+    ]
+    return Response({'modules': modules})
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
