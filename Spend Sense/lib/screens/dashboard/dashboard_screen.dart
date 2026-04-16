@@ -16,6 +16,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final ApiService _apiService = ApiService();
   Map<String, dynamic>? _data;
   bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -33,7 +34,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         });
       }
     } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) setState(() {
+        _isLoading = false;
+        _error = e.toString();
+      });
     }
   }
 
@@ -56,7 +60,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _data == null
-              ? const Center(child: Text("Error loading wallet data."))
+              ? Center(child: Text("Error loading wallet data: $_error", style: TextStyle(color: Colors.red)))
               : SafeArea(
                   child: SingleChildScrollView(
                     child: Padding(
