@@ -7,7 +7,12 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ExpenseSerializer(serializers.ModelSerializer):
-    category_name = serializers.CharField(source='category.expense_type', read_only=True)
+    category_name = serializers.SerializerMethodField()
+
+    def get_category_name(self, obj):
+        if obj.category:
+            return f"{obj.category.expense_type} > {obj.category.main_category} > {obj.category.sub_category}"
+        return "Uncategorized"
 
     class Meta:
         model = Expense

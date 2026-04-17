@@ -7,5 +7,5 @@ urlpatterns = [
     path('expenses/', include('expenses.urls')),
     path('goals/', include('goals.urls')),
     path('split/', include('split.urls')),
-    path('', include('analytics.urls')),
+    path('analytics/', include('analytics.urls')),
 ]

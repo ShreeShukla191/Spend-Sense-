@@ -17,6 +17,25 @@ class GroupViewSet(viewsets.ModelViewSet):
         group.members.add(self.request.user)
 
     @action(detail=True, methods=['post'])
+    def add_member(self, request, pk=None):
+        from django.contrib.auth import get_user_model
+        from django.db.models import Q
+        User = get_user_model()
+        
+        group = self.get_object()
+        identifier = request.data.get('username')
+        
+        if not identifier:
+            return Response({'error': 'Please provide an email or username'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            user = User.objects.get(Q(username=identifier) | Q(email=identifier))
+            group.members.add(user)
+            return Response({'status': 'added', 'member_id': user.id, 'member_name': user.username})
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['post'])
     def add_shared_expense(self, request, pk=None):
         group = self.get_object()
         serializer = SharedExpenseSerializer(data=request.data)
