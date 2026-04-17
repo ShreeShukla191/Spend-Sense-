@@ -67,7 +67,6 @@ class _AddSharedExpenseScreenState extends State<AddSharedExpenseScreen> {
     final splitAmount = widget.members.isNotEmpty ? (_amount / widget.members.length) : 0.0;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: const Text('Split Expense', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
         backgroundColor: Colors.transparent,
@@ -141,9 +140,9 @@ class _AddSharedExpenseScreenState extends State<AddSharedExpenseScreen> {
                       const SizedBox(height: 16),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(16),
-                          boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.05), spreadRadius: 1, blurRadius: 10)]
+                          boxShadow: [BoxShadow(color: Colors.grey.withValues(alpha: 0.05), spreadRadius: 1, blurRadius: 10)]
                         ),
                         child: Column(
                           children: widget.members.map((m) {
@@ -168,7 +167,7 @@ class _AddSharedExpenseScreenState extends State<AddSharedExpenseScreen> {
                       const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                        decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(16)),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<int>(
                             value: _paidById,

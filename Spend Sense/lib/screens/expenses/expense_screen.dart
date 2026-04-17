@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 import 'add_expense_screen.dart';
-import 'add_income_screen.dart';
 
 class ExpenseScreen extends StatefulWidget {
   const ExpenseScreen({super.key});
@@ -110,11 +109,10 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                   key: Key(exp['id'].toString()),
                   direction: DismissDirection.endToStart,
                   background: Container(
-                    color: Colors.redAccent,
                     alignment: Alignment.centerRight,
                     padding: const EdgeInsets.only(right: 20),
                     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
+                    decoration: BoxDecoration(color: Colors.redAccent, borderRadius: BorderRadius.circular(16)),
                     child: const Icon(Icons.delete_outline, color: Colors.white, size: 30),
                   ),
                   onDismissed: (_) {

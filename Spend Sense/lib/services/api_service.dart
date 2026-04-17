@@ -40,6 +40,9 @@ class ApiService {
 
   String _parseError(String body) {
     try {
+      if (body.trim().startsWith('<')) {
+        return 'Server error or endpoint not found. Please ensure backend is running.';
+      }
       final json = jsonDecode(body);
       if (json is Map && json.isNotEmpty) {
         final key = json.keys.first;

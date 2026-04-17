@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../expenses/add_expense_screen.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
+
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -26,7 +25,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void _fetchDashboard() async {
     try {
-      final data = await _apiService.get('/analytics/dashboard/');
+      final data = await _apiService.get('/analytics/');
       if (mounted) {
         setState(() {
           _data = data;
@@ -34,17 +33,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
         });
       }
     } catch (e) {
-      if (mounted) setState(() {
+      if (mounted) {
+        setState(() {
         _isLoading = false;
         _error = e.toString();
       });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: const Text('SpendSense Wallet', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
         backgroundColor: Colors.transparent,
@@ -98,11 +98,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildGreeting() {
     // Currently relying on AuthProvider for username
-    final auth = Provider.of<AuthProvider>(context, listen: false);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Good Morning,', style: TextStyle(color: Colors.grey, fontSize: 16)),
         const SizedBox(height: 4),
         const Text(
           'Hello User!', 
@@ -120,14 +118,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             spreadRadius: 2,
             blurRadius: 10,
             offset: const Offset(0, 4),
           )
         ],
         gradient: LinearGradient(
-          colors: [Colors.blue.shade800, Colors.blue.shade900, Colors.deepPurple.shade900],
+          colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade900],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         )
@@ -160,14 +158,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       children: [
         Container(
           padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+          decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
           child: Icon(icon, color: iconColor, size: 16),
         ),
         const SizedBox(width: 8),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12)),
+            Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
             Text('₹$amount', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
           ],
         )
@@ -183,7 +181,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return Container(
         height: 150,
         alignment: Alignment.center,
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+        decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
         child: const Text('No category data available', style: TextStyle(color: Colors.grey)),
       );
     }
@@ -205,10 +203,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Container(
       height: 200,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.grey.withOpacity(0.1), spreadRadius: 2, blurRadius: 10, offset: const Offset(0, 4))
+          BoxShadow(color: Colors.grey.withValues(alpha: 0.1), spreadRadius: 2, blurRadius: 10, offset: const Offset(0, 4))
         ]
       ),
       child: PieChart(
@@ -235,9 +233,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
          return Container(
            margin: const EdgeInsets.only(bottom: 12),
            decoration: BoxDecoration(
-             color: Colors.white,
+             color: Theme.of(context).cardColor,
              borderRadius: BorderRadius.circular(16),
-             boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.05), spreadRadius: 1, blurRadius: 5)]
+             boxShadow: [BoxShadow(color: Colors.grey.withValues(alpha: 0.05), spreadRadius: 1, blurRadius: 5)]
            ),
            child: ListTile(
              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

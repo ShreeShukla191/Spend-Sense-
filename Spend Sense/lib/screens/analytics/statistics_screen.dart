@@ -84,7 +84,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     final forecastData = forecastDataRaw is List ? List<double>.from(forecastDataRaw.map((x) => x is num ? x.toDouble() : 0.0)) : <double>[];
 
     final subscriptions = _data!['subscriptions'] is List ? _data!['subscriptions'] as List : [];
-    final accounts = _data!['accounts'] is List ? _data!['accounts'] as List : [];
     final topAccount = _data!['top_account']?.toString() ?? 'None';
 
     return RefreshIndicator(
@@ -195,7 +194,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             barWidth: 4,
             isStrokeCapRound: true,
             dotData: const FlDotData(show: true),
-            belowBarData: BarAreaData(show: true, color: Colors.blueAccent.withOpacity(0.2)),
+            belowBarData: BarAreaData(show: true, color: Colors.blueAccent.withValues(alpha: 0.2)),
           ),
         ],
       ),

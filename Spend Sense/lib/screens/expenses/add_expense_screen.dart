@@ -113,7 +113,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(widget.expenseData != null ? 'Edit Expense' : 'Add Expense', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
         backgroundColor: Colors.transparent,
@@ -202,7 +201,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               gradient: const LinearGradient(colors: [Colors.blueAccent, Colors.lightBlue]),
-                              boxShadow: [BoxShadow(color: Colors.blue.withOpacity(0.3), blurRadius: 15, spreadRadius: 5)],
+                              boxShadow: [BoxShadow(color: Colors.blue.withValues(alpha: 0.3), blurRadius: 15, spreadRadius: 5)],
                             ),
                             child: const Icon(Icons.mic, color: Colors.white, size: 40),
                           ),

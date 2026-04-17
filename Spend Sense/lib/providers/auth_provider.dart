@@ -4,10 +4,10 @@ import '../services/api_service.dart';
 class AuthProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
   bool _isAuthenticated = false;
-  bool _isLoading = true;
+  bool _isInitializing = true;
 
   bool get isAuthenticated => _isAuthenticated;
-  bool get isLoading => _isLoading;
+  bool get isInitializing => _isInitializing;
 
   AuthProvider() {
     _checkStatus();
@@ -16,21 +16,16 @@ class AuthProvider with ChangeNotifier {
   Future<void> _checkStatus() async {
     final token = await _apiService.getToken();
     _isAuthenticated = token != null;
-    _isLoading = false;
+    _isInitializing = false;
     notifyListeners();
   }
 
   Future<String?> login(String username, String password) async {
-    _isLoading = true;
-    notifyListeners();
-    
     final error = await _apiService.login(username, password);
     if (error == null) {
       _isAuthenticated = true;
+      notifyListeners();
     }
-    
-    _isLoading = false;
-    notifyListeners();
     return error;
   }
 
@@ -41,13 +36,7 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<String?> register(String username, String email, String password) async {
-    _isLoading = true;
-    notifyListeners();
-    
     final error = await _apiService.register(username, email, password);
-    
-    _isLoading = false;
-    notifyListeners();
     return error;
   }
 }

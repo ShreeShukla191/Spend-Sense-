@@ -14,6 +14,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   void _signup() async {
     if (_nameController.text.trim().isEmpty || _emailController.text.trim().isEmpty || _passwordController.text.isEmpty) {
@@ -52,27 +53,18 @@ class _SignupScreenState extends State<SignupScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Sign Up', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Sign Up', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF2E3192), Color(0xFF1BFFFF)], 
-            begin: Alignment.topRight, 
-            end: Alignment.bottomLeft,
-          )
-        ),
-        child: SafeArea(
+      body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
               child: Card(
                 elevation: 12,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                color: Colors.white.withOpacity(0.95),
+                color: Theme.of(context).cardColor,
                 child: Padding(
                   padding: const EdgeInsets.all(32.0),
                   child: Column(
@@ -103,8 +95,6 @@ class _SignupScreenState extends State<SignupScreen> {
                         controller: _nameController,
                         decoration: InputDecoration(
                           labelText: 'Full Name',
-                          filled: true,
-                          fillColor: Colors.grey.shade100,
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                           prefixIcon: const Icon(Icons.person_outline),
                         ),
@@ -116,8 +106,6 @@ class _SignupScreenState extends State<SignupScreen> {
                         controller: _emailController,
                         decoration: InputDecoration(
                           labelText: 'Email Address',
-                          filled: true,
-                          fillColor: Colors.grey.shade100,
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                           prefixIcon: const Icon(Icons.email_outlined),
                         ),
@@ -128,13 +116,19 @@ class _SignupScreenState extends State<SignupScreen> {
                       // Password field
                       TextField(
                         controller: _passwordController,
-                        obscureText: true,
+                        obscureText: _obscurePassword,
                         decoration: InputDecoration(
                           labelText: 'Password',
-                          filled: true,
-                          fillColor: Colors.grey.shade100,
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                           prefixIcon: const Icon(Icons.lock_outline),
+                          suffixIcon: IconButton(
+                            icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
                         ),
                       ),
                       const SizedBox(height: 40),
@@ -159,7 +153,6 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
           ),
         ),
-      ),
     );
   }
 }

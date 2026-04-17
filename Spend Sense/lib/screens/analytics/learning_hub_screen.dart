@@ -30,10 +30,12 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
         });
       }
     } catch (e) {
-      if (mounted) setState(() {
+      if (mounted) {
+        setState(() {
         _isLoading = false;
         _error = 'Failed to load educational modules: $e';
       });
+      }
     }
   }
 
@@ -50,10 +52,8 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: const Text('Learning Hub', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
-        backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.blueAccent),
       ),
