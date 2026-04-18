@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -54,13 +55,34 @@ class ApiService {
     }
   }
 
+  // Robust retry mechanism for network timeouts (e.g. Render cold start)
+  Future<http.Response> _requestWithRetry(Future<http.Response> Function() requestFunc, {int retries = 2}) async {
+    int attempt = 0;
+    while (attempt <= retries) {
+      try {
+        // A generous timeout per attempt, combined with retries, covers > 60s cold starts effortlessly
+        return await requestFunc().timeout(const Duration(seconds: 35));
+      } on TimeoutException catch (e) {
+        attempt++;
+        if (attempt > retries) rethrow;
+        debugPrint('Request timed out: $e. Retrying ($attempt/$retries)...');
+      } catch (e) {
+        attempt++;
+        if (attempt > retries) rethrow;
+        debugPrint('Network error: $e. Retrying ($attempt/$retries)...');
+        await Future.delayed(const Duration(seconds: 2));
+      }
+    }
+    throw Exception('Failed after $retries retries');
+  }
+
   Future<String?> login(String username, String password) async {
     try {
-      final response = await http.post(
+      final response = await _requestWithRetry(() => http.post(
         Uri.parse('${baseUrl}auth/login/'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'username': username, 'password': password}),
-      ).timeout(const Duration(seconds: 10));
+      ));
 
       debugPrint('Login response: ${response.statusCode} - ${response.body}');
 
@@ -80,7 +102,7 @@ class ApiService {
     try {
       final headers = await _getHeaders();
       final cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
-      final response = await http.get(Uri.parse('$baseUrl$cleanEndpoint'), headers: headers).timeout(const Duration(seconds: 10));
+      final response = await _requestWithRetry(() => http.get(Uri.parse('$baseUrl$cleanEndpoint'), headers: headers));
       
       debugPrint('GET $endpoint response: ${response.statusCode} - ${response.body}');
       
@@ -102,11 +124,11 @@ class ApiService {
     try {
       final headers = await _getHeaders();
       final cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
-      final response = await http.post(
+      final response = await _requestWithRetry(() => http.post(
         Uri.parse('$baseUrl$cleanEndpoint'),
         headers: headers,
         body: jsonEncode(body),
-      ).timeout(const Duration(seconds: 10));
+      ));
 
       debugPrint('POST $endpoint response: ${response.statusCode} - ${response.body}');
 
@@ -128,11 +150,11 @@ class ApiService {
     try {
       final headers = await _getHeaders();
       final cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
-      final response = await http.put(
+      final response = await _requestWithRetry(() => http.put(
         Uri.parse('$baseUrl$cleanEndpoint'),
         headers: headers,
         body: jsonEncode(body),
-      ).timeout(const Duration(seconds: 10));
+      ));
 
       if (response.statusCode == 200 || response.statusCode == 204) {
         return response.body.isEmpty ? null : jsonDecode(response.body);
@@ -151,10 +173,10 @@ class ApiService {
     try {
       final headers = await _getHeaders();
       final cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
-      final response = await http.delete(
+      final response = await _requestWithRetry(() => http.delete(
         Uri.parse('$baseUrl$cleanEndpoint'),
         headers: headers,
-      ).timeout(const Duration(seconds: 10));
+      ));
 
       if (response.statusCode == 200 || response.statusCode == 204) {
         return null;
@@ -171,7 +193,7 @@ class ApiService {
 
   Future<String?> register(String username, String email, String password) async {
     try {
-      final response = await http.post(
+      final response = await _requestWithRetry(() => http.post(
         Uri.parse('${baseUrl}auth/register/'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
@@ -180,7 +202,7 @@ class ApiService {
           'password': password,
           'password_confirm': password,
         }),
-      ).timeout(const Duration(seconds: 10));
+      ));
 
       debugPrint('Register response: ${response.statusCode} - ${response.body}');
 

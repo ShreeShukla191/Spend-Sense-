@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import 'signup_screen.dart' as signup_screen;
@@ -74,6 +75,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       TextField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                        ],
                         decoration: InputDecoration(
                           labelText: 'Email / Username',
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),

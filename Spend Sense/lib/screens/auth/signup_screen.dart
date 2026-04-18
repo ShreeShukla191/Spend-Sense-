@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 
@@ -90,11 +91,14 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                       const SizedBox(height: 48),
                       
-                      // Name field
+                      // Username field
                       TextField(
                         controller: _nameController,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                        ],
                         decoration: InputDecoration(
-                          labelText: 'Full Name',
+                          labelText: 'Username',
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                           prefixIcon: const Icon(Icons.person_outline),
                         ),
