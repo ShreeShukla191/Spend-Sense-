@@ -5,10 +5,22 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static String get baseUrl {
-    if (kIsWeb) return 'http://127.0.0.1:8000/';
-    if (defaultTargetPlatform == TargetPlatform.windows) return 'http://127.0.0.1:8000/';
+  static String _currentBaseUrl = _getDefaultBaseUrl();
+
+  static String _getDefaultBaseUrl() {
+    if (kIsWeb) return 'http://localhost:8000/';
+    if (defaultTargetPlatform == TargetPlatform.windows) return 'http://localhost:8000/';
     return 'http://10.0.2.2:8000/';
+  }
+
+  static String get baseUrl => _currentBaseUrl;
+
+  static void switchBaseUrl() {
+    if (_currentBaseUrl.contains('localhost')) {
+      _currentBaseUrl = _currentBaseUrl.replaceAll('localhost', '127.0.0.1');
+    } else if (_currentBaseUrl.contains('127.0.0.1')) {
+      _currentBaseUrl = _currentBaseUrl.replaceAll('127.0.0.1', 'localhost');
+    }
   }
 
   Future<String?> getToken() async {
@@ -57,7 +69,7 @@ class ApiService {
     }
   }
 
-  // Robust retry mechanism for network timeouts (e.g. Render cold start)
+  // Robust retry mechanism for network timeouts and local host resolution issues
   Future<http.Response> _requestWithRetry(Future<http.Response> Function() requestFunc, {int retries = 2}) async {
     int attempt = 0;
     while (attempt <= retries) {
@@ -70,6 +82,13 @@ class ApiService {
         debugPrint('Request timed out: $e. Retrying ($attempt/$retries)...');
       } catch (e) {
         attempt++;
+        String errorStr = e.toString().toLowerCase();
+        // If we hit a connection error on web or desktop, it might be a localhost vs 127.0.0.1 issue (IPv4/IPv6 mismatch)
+        if (errorStr.contains('failed to fetch') || errorStr.contains('connection refused') || errorStr.contains('socketexception')) {
+          debugPrint('Connection error detected. Switching base URL and retrying...');
+          switchBaseUrl();
+        }
+        
         if (attempt > retries) rethrow;
         debugPrint('Network error: $e. Retrying ($attempt/$retries)...');
         await Future.delayed(const Duration(seconds: 2));
@@ -96,6 +115,9 @@ class ApiService {
       return _parseError(response.body);
     } catch (e) {
       debugPrint('Network or API Error during login: $e');
+      if (e.toString().contains('Failed to fetch')) {
+        return 'Network Error: Cannot connect to server. Please ensure the backend is running at ${baseUrl}.';
+      }
       return 'Network Error: $e';
     }
   }
@@ -214,6 +236,9 @@ class ApiService {
       return _parseError(response.body);
     } catch (e) {
       debugPrint('Network or API Error during register: $e');
+      if (e.toString().contains('Failed to fetch')) {
+        return 'Network Error: Cannot connect to server. Please ensure the backend is running at ${baseUrl}.';
+      }
       return 'Network Error: $e';
     }
   }
