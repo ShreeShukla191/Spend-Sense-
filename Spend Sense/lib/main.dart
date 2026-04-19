@@ -31,7 +31,7 @@ class SpendSenseApp extends StatelessWidget {
           onSurface: Colors.black87,
         ),
         scaffoldBackgroundColor: Colors.white,
-        textTheme: GoogleFonts.interTextTheme(
+        textTheme: GoogleFonts.kalamTextTheme(
           Theme.of(context).textTheme,
         ),
         appBarTheme: const AppBarTheme(
@@ -60,7 +60,7 @@ class SpendSenseApp extends StatelessWidget {
           onSurface: Colors.white,
         ),
         scaffoldBackgroundColor: Colors.black,
-        textTheme: GoogleFonts.interTextTheme(
+        textTheme: GoogleFonts.kalamTextTheme(
           ThemeData.dark().textTheme,
         ).apply(bodyColor: Colors.white, displayColor: Colors.white),
         appBarTheme: const AppBarTheme(

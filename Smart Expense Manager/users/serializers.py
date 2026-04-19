@@ -1,11 +1,11 @@
 from rest_framework import serializers
-from .models import User
+from .models import User, LoginActivity
 from django.contrib.auth.password_validation import validate_password
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'monthly_budget', 'profile_picture', 'assets', 'loans')
+        fields = ('id', 'username', 'email', 'monthly_budget', 'profile_picture', 'assets', 'loans', 'is_2fa_enabled')
         read_only_fields = ('id', 'username')
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -32,3 +32,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
+
+class LoginActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LoginActivity
+        fields = ('id', 'ip_address', 'user_agent', 'timestamp')
+        read_only_fields = fields

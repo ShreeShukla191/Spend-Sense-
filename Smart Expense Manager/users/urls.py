@@ -5,7 +5,8 @@ from . import views
 
 urlpatterns = [
     path('register/', csrf_exempt(views.RegisterAPIView.as_view()), name='api-register'),
-    path('login/', csrf_exempt(TokenObtainPairView.as_view()), name='api-login'),
+    path('login/', csrf_exempt(views.CustomTokenObtainPairView.as_view()), name='api-login'),
     path('token/refresh/', csrf_exempt(TokenRefreshView.as_view()), name='api-token-refresh'),
     path('settings/', views.UserSettingsAPIView.as_view(), name='api-settings'),
+    path('login-activity/', views.LoginActivityAPIView.as_view(), name='api-login-activity'),
 ]

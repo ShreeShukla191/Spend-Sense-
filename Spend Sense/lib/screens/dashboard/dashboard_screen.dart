@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
-import '../expenses/add_expense_screen.dart';
+import '../settings/main_settings_screen.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 
@@ -15,7 +15,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final ApiService _apiService = ApiService();
   Map<String, dynamic>? _data;
   bool _isLoading = true;
-  String? _error;
 
   @override
   void initState() {
@@ -35,9 +34,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-        _isLoading = false;
-        _error = e.toString();
-      });
+          _isLoading = false;
+        });
       }
     }
   }
@@ -45,211 +43,339 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF161616),
       appBar: AppBar(
-        title: const Text('SpendSense Wallet', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
-        backgroundColor: Colors.transparent,
+        title: const Text('Home', style: TextStyle(fontSize: 28, color: Colors.white)),
+        backgroundColor: const Color(0xFF222222),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_outlined, color: Colors.black87),
+            icon: const Icon(Icons.notifications_active, color: Colors.white),
             onPressed: () {},
           )
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _data == null
-              ? Center(child: Text("Error loading wallet data: $_error", style: TextStyle(color: Colors.red)))
-              : SafeArea(
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+          : SafeArea(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      color: const Color(0xFF222222),
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          _buildGreeting(),
-                          const SizedBox(height: 24),
-                          _buildWalletBalanceCard(),
-                          const SizedBox(height: 32),
-                          const Text('Category Distribution', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 16),
-                          _buildPieChart(),
-                          const SizedBox(height: 32),
-                          const Text('Recent Transactions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 16),
-                          _buildRecentTransactions(),
-                          const SizedBox(height: 80), // Padding for FAB
+                          Container(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            decoration: const BoxDecoration(
+                              border: Border(bottom: BorderSide(color: Colors.white, width: 3)),
+                            ),
+                            child: const Text('Accounts', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(bottom: 8),
+                            child: Text('Budgets & Goals', style: TextStyle(color: Colors.grey, fontSize: 18)),
+                          ),
                         ],
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('List of accounts', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                          GestureDetector(
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MainSettingsScreen())),
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(color: const Color(0xFF3A4B6B), borderRadius: BorderRadius.circular(8)),
+                              child: const Icon(Icons.settings, color: Colors.blueAccent, size: 20),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 80,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        children: [
+                          Container(
+                            width: 160,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(color: Colors.lightBlue, borderRadius: BorderRadius.circular(12)),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text('Cash', style: TextStyle(color: Colors.white, fontSize: 16)),
+                                Text('₹${_data?['remaining_budget'] ?? '20,000.00'}', style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Container(
+                            width: 160,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFF3A4B6B), width: 2),
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Add account', style: TextStyle(color: Colors.lightBlue, fontSize: 18)),
+                                Icon(Icons.add_circle, color: Colors.lightBlue),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Expanded(child: _buildActionButton('Account Detail', null)),
+                          const SizedBox(width: 12),
+                          Expanded(child: _buildActionButton('Records', Icons.list)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Expanded(child: _buildActionButton('Planned payments', Icons.update, textColor: Colors.white)),
+                          const SizedBox(width: 12),
+                          Expanded(child: _buildActionButton('Shopping lists', Icons.shopping_basket_outlined, textColor: Colors.white)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSpeedometers(),
+                    const SizedBox(height: 16),
+                    _buildBalanceTrend(),
+                    const SizedBox(height: 16),
+                    _buildExpensesStructure(),
+                    const SizedBox(height: 40),
+                  ],
                 ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const AddExpenseScreen())).then((_) => _fetchDashboard());
-        },
-        backgroundColor: Colors.blueAccent,
-        elevation: 4,
-        child: const Icon(Icons.add, size: 30),
-      ),
+              ),
+            ),
     );
   }
 
-  Widget _buildGreeting() {
-    // Currently relying on AuthProvider for username
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 4),
-        const Text(
-          'Hello User!', 
-          style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.black87)
-        ),
-      ],
-    );
-  }
-
-  Widget _buildWalletBalanceCard() {
-    final balance = _data?['remaining_budget']?.toString() ?? '0.0';
+  Widget _buildActionButton(String title, IconData? icon, {Color textColor = Colors.white}) {
     return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.black87,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            spreadRadius: 2,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
-        ],
-        gradient: LinearGradient(
-          colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade900],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        )
+        color: const Color(0xFF222222),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF333333)),
       ),
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text('Total Balance', style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w500)),
-          const SizedBox(height: 12),
-          Text(
-            '₹$balance',
-            style: const TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold, letterSpacing: 1.0),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildMiniStat('Income', _data?['total_income']?.toString() ?? '0.0', Icons.arrow_downward, Colors.greenAccent),
-              _buildMiniStat('Expenses', _data?['total_expenses']?.toString() ?? '0.0', Icons.arrow_upward, Colors.redAccent),
-            ],
-          )
+          if (icon != null) ...[
+            Icon(icon, color: Colors.grey, size: 20),
+            const SizedBox(width: 8),
+          ],
+          Text(title, style: TextStyle(color: textColor, fontSize: 16)),
         ],
       ),
     );
   }
 
-  Widget _buildMiniStat(String label, String amount, IconData icon, Color iconColor) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
-          child: Icon(icon, color: iconColor, size: 16),
-        ),
-        const SizedBox(width: 8),
-        Column(
+  Widget _buildSpeedometers() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: const Color(0xFF222222), borderRadius: BorderRadius.circular(16)),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
-            Text('₹$amount', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+            const Text('Dashboard', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildSingleGauge('BALANCE', '20K', Colors.orange, 0.7),
+                _buildSingleGauge('CASH FLOW', '0', Colors.red, 0.0),
+                _buildSingleGauge('SPENDING', '0', Colors.green, 0.0),
+              ],
+            ),
           ],
-        )
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSingleGauge(String title, String value, Color activeColor, double percentage) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 80,
+          width: 80,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              PieChart(
+                PieChartData(
+                  startDegreeOffset: 180,
+                  sectionsSpace: 0,
+                  centerSpaceRadius: 30,
+                  sections: [
+                    PieChartSectionData(color: activeColor, value: percentage * 100, title: '', radius: 10),
+                    PieChartSectionData(color: const Color(0xFF333333), value: (1 - percentage) * 100, title: '', radius: 10),
+                    PieChartSectionData(color: Colors.transparent, value: 100, title: '', radius: 10), // Bottom half
+                  ],
+                ),
+              ),
+              const Positioned(
+                bottom: 20,
+                child: Icon(Icons.arrow_upward, color: Colors.grey, size: 20), // Placeholder needle
+              )
+            ],
+          ),
+        ),
+        Text(title, style: const TextStyle(color: Colors.grey, fontSize: 10, letterSpacing: 1.2)),
+        Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
       ],
     );
   }
 
-  Widget _buildPieChart() {
-    final labels = _data?['pie_labels'] as List? ?? [];
-    final amounts = _data?['pie_data'] as List? ?? [];
-    
-    if (amounts.isEmpty) {
-      return Container(
-        height: 150,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20)),
-        child: const Text('No category data available', style: TextStyle(color: Colors.grey)),
-      );
-    }
-
-    final colors = [Colors.blue, Colors.red, Colors.green, Colors.orange, Colors.purple, Colors.teal];
-    
-    List<PieChartSectionData> sections = [];
-    for (int i = 0; i < amounts.length; i++) {
-       final double val = (amounts[i] as num).toDouble();
-       sections.add(PieChartSectionData(
-         color: colors[i % colors.length],
-         value: val,
-         title: labels.length > i ? labels[i] : 'Other',
-         radius: 50,
-         titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
-       ));
-    }
-
-    return Container(
-      height: 200,
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(color: Colors.grey.withValues(alpha: 0.1), spreadRadius: 2, blurRadius: 10, offset: const Offset(0, 4))
-        ]
-      ),
-      child: PieChart(
-        PieChartData(
-          sections: sections,
-          centerSpaceRadius: 40,
-          sectionsSpace: 2,
-        )
+  Widget _buildBalanceTrend() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: const Color(0xFF222222), borderRadius: BorderRadius.circular(16)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Balance Trend', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                Icon(Icons.more_horiz, color: Colors.grey),
+              ],
+            ),
+            const SizedBox(height: 8),
+            const Text('This month', style: TextStyle(color: Colors.grey, fontSize: 14)),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('₹${_data?['remaining_budget'] ?? '20,000.00'}', style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: Colors.grey.shade800, borderRadius: BorderRadius.circular(12)),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.remove_circle, color: Colors.grey, size: 16),
+                      SizedBox(width: 4),
+                      Text('0%', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    ],
+                  ),
+                )
+              ],
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              height: 120,
+              child: LineChart(
+                LineChartData(
+                  gridData: const FlGridData(show: true, drawVerticalLine: false),
+                  titlesData: FlTitlesData(
+                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 22,
+                        getTitlesWidget: (val, meta) => Text('${val.toInt()} Apr', style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                        interval: 4,
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (val, meta) => Text('${val.toInt()}K', style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                        interval: 5,
+                        reservedSize: 28,
+                      ),
+                    ),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: const [
+                        FlSpot(1, 20), FlSpot(4, 20), FlSpot(7, 20), FlSpot(11, 20), FlSpot(15, 20), FlSpot(19, 20)
+                      ],
+                      isCurved: false,
+                      color: Colors.lightBlueAccent,
+                      barWidth: 2,
+                      isStrokeCapRound: true,
+                      dotData: const FlDotData(show: false),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        color: Colors.lightBlueAccent.withValues(alpha: 0.1),
+                      ),
+                    ),
+                  ],
+                  minX: 1, maxX: 30, minY: 0, maxY: 25,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildRecentTransactions() {
-     final recents = _data?['recent_expenses'] as List? ?? [];
-     if (recents.isEmpty) {
-        return const Center(child: Padding(
-          padding: EdgeInsets.all(24.0),
-          child: Text('No recent transactions.', style: TextStyle(color: Colors.grey)),
-        ));
-     }
-
-     return Column(
-       children: recents.map((txn) {
-         return Container(
-           margin: const EdgeInsets.only(bottom: 12),
-           decoration: BoxDecoration(
-             color: Theme.of(context).cardColor,
-             borderRadius: BorderRadius.circular(16),
-             boxShadow: [BoxShadow(color: Colors.grey.withValues(alpha: 0.05), spreadRadius: 1, blurRadius: 5)]
-           ),
-           child: ListTile(
-             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-             leading: Container(
-               padding: const EdgeInsets.all(12),
-               decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(12)),
-               child: const Icon(Icons.receipt_long, color: Colors.blueAccent),
-             ),
-             title: Text(txn['description'] ?? 'Transaction', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-             subtitle: Text(txn['date'] ?? '', style: const TextStyle(color: Colors.grey)),
-             trailing: Text('-₹${txn['amount'] ?? '0.0'}', style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 16)),
-           ),
-         );
-       }).toList(),
-     );
+  Widget _buildExpensesStructure() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: const Color(0xFF222222), borderRadius: BorderRadius.circular(16)),
+        height: 200,
+        width: double.infinity,
+        child: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Expenses Structure', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                Icon(Icons.more_horiz, color: Colors.grey),
+              ],
+            ),
+            Spacer(),
+            Center(
+              child: Text(
+                'There are no data in the\nselected time interval.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey, fontSize: 16),
+              ),
+            ),
+            Spacer(),
+          ],
+        ),
+      ),
+    );
   }
 }

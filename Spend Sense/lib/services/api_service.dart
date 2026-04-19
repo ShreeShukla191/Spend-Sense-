@@ -6,7 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   static String get baseUrl {
-    return 'https://spend-sense-z2cy.onrender.com/';
+    if (kIsWeb) return 'http://localhost:8000/';
+    if (defaultTargetPlatform == TargetPlatform.windows) return 'http://localhost:8000/';
+    return 'http://10.0.2.2:8000/';
   }
 
   Future<String?> getToken() async {

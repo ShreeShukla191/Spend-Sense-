@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../services/api_service.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -8,192 +7,226 @@ class AnalyticsScreen extends StatefulWidget {
   State<AnalyticsScreen> createState() => _AnalyticsScreenState();
 }
 
-class _AnalyticsScreenState extends State<AnalyticsScreen> {
-  final ApiService _apiService = ApiService();
-  Map<String, dynamic>? _cashFlow;
-  Map<String, dynamic>? _outlook;
-  Map<String, dynamic>? _spending;
-  bool _isLoading = true;
+class _AnalyticsScreenState extends State<AnalyticsScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  final List<Map<String, dynamic>> _expenseCategories = [
+    {'name': 'Food & Drinks', 'icon': Icons.restaurant, 'color': Colors.redAccent},
+    {'name': 'Shopping', 'icon': Icons.shopping_bag, 'color': Colors.lightBlue},
+    {'name': 'Housing', 'icon': Icons.home, 'color': Colors.orangeAccent},
+    {'name': 'Transportation', 'icon': Icons.directions_bus, 'color': Colors.teal},
+    {'name': 'Vehicle', 'icon': Icons.directions_car, 'color': Colors.purpleAccent},
+    {'name': 'Life & Entertainment', 'icon': Icons.movie, 'color': Colors.greenAccent},
+    {'name': 'Communication, PC', 'icon': Icons.computer, 'color': Colors.blue},
+    {'name': 'Financial expenses', 'icon': Icons.attach_money, 'color': Colors.tealAccent},
+    {'name': 'Investments', 'icon': Icons.trending_up, 'color': Colors.pinkAccent},
+    {'name': 'Others', 'icon': Icons.list, 'color': Colors.grey},
+    {'name': 'Unknown', 'icon': Icons.help_outline, 'color': Colors.grey},
+  ];
 
   @override
   void initState() {
     super.initState();
-    _fetchAnalytics();
+    _tabController = TabController(length: 4, vsync: this);
   }
 
-  void _fetchAnalytics() async {
-    try {
-      final cashData = await _apiService.get('/analytics/cash-flow/');
-      final outlookData = await _apiService.get('/analytics/outlook/');
-      final spendingData = await _apiService.get('/analytics/spending/');
-      if (mounted) {
-        setState(() {
-          _cashFlow = cashData;
-          _outlook = outlookData;
-          _spending = spendingData;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
-    }
+  void _openFilters() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF222222),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.8,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Filters', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              _buildFilterDropdown('Accounts', 'All accounts'),
+              _buildFilterDropdown('Categories', 'All categories'),
+              _buildFilterDropdown('Labels', 'All'),
+              _buildFilterDropdown('Currencies', 'All Currencies'),
+              _buildFilterDropdown('Record types', 'All Record types'),
+              const Spacer(),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    side: const BorderSide(color: Colors.green),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Reset Filter', style: TextStyle(color: Colors.green, fontSize: 16)),
+                ),
+              )
+            ],
+          ),
+        );
+      },
+    );
   }
 
-  void _triggerExport(String format) async {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Generating $format report on backend... Check server logs or download folder.')));
-    try {
-      if (format == 'PDF') {
-        await _apiService.get('/analytics/export/pdf/');
-      } else {
-        await _apiService.get('/analytics/export/excel/');
-      }
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Export completed successfully!'), backgroundColor: Colors.green));
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Export Note: File stream generated natively. ($e)')));
-    }
+  Widget _buildFilterDropdown(String label, String hint) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.white24),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                isExpanded: true,
+                hint: Text(hint, style: const TextStyle(color: Colors.white54)),
+                dropdownColor: const Color(0xFF333333),
+                icon: const Icon(Icons.unfold_more, color: Colors.white54),
+                items: const [],
+                onChanged: (val) {},
+              ),
+            ),
+          )
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Analytics Hub')),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
+      backgroundColor: const Color(0xFF161616),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF222222),
+        elevation: 0,
+        title: const Text('Analytics', style: TextStyle(color: Colors.white, fontSize: 24)),
+        iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list, color: Colors.green),
+            onPressed: _openFilters,
+          )
+        ],
+        bottom: TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          indicatorColor: Colors.green,
+          labelColor: Colors.green,
+          unselectedLabelColor: Colors.white54,
+          tabs: const [
+            Tab(text: 'Incomes & Expenses Report'),
+            Tab(text: 'Balance Trend'),
+            Tab(text: 'Cash flow'),
+            Tab(text: 'Advanced Charts and Reports'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildIncomeExpenseReport(),
+          const Center(child: Text('Balance Trend', style: TextStyle(color: Colors.white))),
+          const Center(child: Text('Cash flow', style: TextStyle(color: Colors.white))),
+          const Center(child: Text('Advanced Charts', style: TextStyle(color: Colors.white))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIncomeExpenseReport() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('', style: TextStyle(color: Colors.white)),
+            const Text('April 2026', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            const Text('March 2026', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        const SizedBox(height: 16),
+        
+        // Total Income Section
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Total Income', style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
+              Text('₹0.00', style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
+              Text('₹0.00', style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.all(16),
+          color: const Color(0xFF1E1E1E),
+          child: const Row(
+            children: [
+              Icon(Icons.account_balance_wallet, color: Colors.orangeAccent, size: 20),
+              SizedBox(width: 12),
+              Expanded(child: Text('Income', style: TextStyle(color: Colors.white70, fontSize: 16))),
+              Text('₹0.00', style: TextStyle(color: Colors.white70)),
+              SizedBox(width: 40),
+              Text('₹0.00', style: TextStyle(color: Colors.white70)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 32),
+        
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('', style: TextStyle(color: Colors.white)),
+            const Text('April 2026', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            const Text('March 2026', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Total Expense Section
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Total Expense', style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
+              Text('₹0.00', style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
+              Text('₹0.00', style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+        ..._expenseCategories.map((cat) {
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: const BoxDecoration(
+              color: Color(0xFF1E1E1E),
+              border: Border(bottom: BorderSide(color: Colors.white12)),
+            ),
+            child: Row(
               children: [
-                const Text('Cash Flow (Last 6 Months)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey)),
-                const SizedBox(height: 16),
-                _buildCashFlowCard(),
-                const SizedBox(height: 32),
-                const Text('6-Month Outlook Projection', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey)),
-                const SizedBox(height: 16),
-                _buildOutlookCard(),
-                const SizedBox(height: 32),
-                const Text('Top Spending Categories', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey)),
-                const SizedBox(height: 16),
-                _buildSpendingCard(),
-                const SizedBox(height: 32),
-                const Text('Data Export Engine', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey)),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade100, foregroundColor: Colors.red.shade900, padding: const EdgeInsets.all(16)),
-                        onPressed: () => _triggerExport('PDF'),
-                        icon: const Icon(Icons.picture_as_pdf),
-                        label: const Text('Export PDF'),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade100, foregroundColor: Colors.green.shade900, padding: const EdgeInsets.all(16)),
-                        onPressed: () => _triggerExport('Excel'),
-                        icon: const Icon(Icons.table_chart),
-                        label: const Text('Export Excel'),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                Card(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  child: ListTile(
-                    leading: const Icon(Icons.school, color: Colors.indigo),
-                    title: const Text('Learning Hub'),
-                    subtitle: const Text('Knowledge base and financial literacy materials are locked for premium users.'),
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Learning Hub module requested.')));
-                    },
-                  ),
-                )
+                Icon(cat['icon'], color: cat['color'], size: 20),
+                const SizedBox(width: 12),
+                Expanded(child: Text(cat['name'], style: const TextStyle(color: Colors.white70, fontSize: 16))),
+                const Text('₹0.00', style: TextStyle(color: Colors.white70)),
+                const SizedBox(width: 40),
+                const Text('₹0.00', style: TextStyle(color: Colors.white70)),
               ],
             ),
-    );
-  }
-
-  Widget _buildCashFlowCard() {
-    if (_cashFlow == null || (_cashFlow!['labels'] as List).isEmpty) {
-      return const Card(child: Padding(padding: EdgeInsets.all(16), child: Text('No cash flow data available.')));
-    }
-    
-    final labels = _cashFlow!['labels'] as List;
-    final cashIn = _cashFlow!['cash_in'] as List;
-    final cashOut = _cashFlow!['cash_out'] as List;
-
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: labels.length,
-        separatorBuilder: (ctx, i) => const Divider(),
-        itemBuilder: (ctx, i) {
-          final cin = (cashIn[i] as num).toDouble();
-          final cout = (cashOut[i] as num).toDouble();
-          final net = cin - cout;
-          return ListTile(
-            title: Text(labels[i].toString(), style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text('In: ₹$cin | Out: ₹$cout'),
-            trailing: Text(
-              'Net: ₹${net.toStringAsFixed(0)}', 
-              style: TextStyle(color: net >= 0 ? Colors.green : Colors.red, fontWeight: FontWeight.bold)
-            ),
           );
-        },
-      ),
-    );
-  }
-
-  Widget _buildOutlookCard() {
-    if (_outlook == null || (_outlook!['labels'] as List).isEmpty) {
-      return const Card(child: Padding(padding: EdgeInsets.all(16), child: Text('No outlook data available.')));
-    }
-    final labels = _outlook!['labels'] as List;
-    final balances = _outlook!['data'] as List;
-
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: labels.length,
-        itemBuilder: (ctx, i) {
-          final bal = (balances[i] as num).toDouble();
-          return ListTile(
-            leading: const Icon(Icons.show_chart, color: Colors.blueAccent),
-            title: Text(labels[i].toString()),
-            trailing: Text('₹${bal.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildSpendingCard() {
-    if (_spending == null || (_spending!['categories'] as List).isEmpty) {
-      return const Card(child: Padding(padding: EdgeInsets.all(16), child: Text('No spending data available.')));
-    }
-    final categories = _spending!['categories'] as List;
-
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Column(
-        children: categories.map((cat) {
-          final amount = (cat['amount'] as num).toDouble();
-          return ListTile(
-            title: Text(cat['name'].toString()),
-            trailing: Text('₹${amount.toStringAsFixed(0)}', style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-          );
-        }).toList(),
-      ),
+        }),
+      ],
     );
   }
 }
