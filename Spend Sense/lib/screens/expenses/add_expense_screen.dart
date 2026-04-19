@@ -170,7 +170,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         onStatus: (val) {
           debugPrint('onStatus: $val');
           if (val == 'done' || val == 'notListening') {
-            if (mounted) setState(() => _isListening = false);
+            if (mounted && _isListening) {
+              setState(() => _isListening = false);
+              // Auto-submit when mic session ends and we have an amount
+              if (_amountController.text.isNotEmpty && _amountController.text != '0.00' && _amountController.text != '') {
+                _submit();
+              }
+            }
           }
         },
         onError: (val) {
@@ -181,9 +187,18 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       if (available) {
         setState(() => _isListening = true);
         _speech.listen(
-          onResult: (val) => setState(() {
-            _descriptionController.text = val.recognizedWords;
-          }),
+          onResult: (val) {
+            setState(() {
+              _descriptionController.text = val.recognizedWords;
+            });
+            if (val.finalResult) {
+              Future.delayed(const Duration(milliseconds: 500), () {
+                if (mounted && _amountController.text.isNotEmpty) {
+                  _submit();
+                }
+              });
+            }
+          },
         );
       } else {
         if (mounted) {
@@ -193,6 +208,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     } else {
       setState(() => _isListening = false);
       _speech.stop();
+      // Auto-submit when manually stopped
+      if (_amountController.text.isNotEmpty && _amountController.text != '0.00' && _amountController.text != '') {
+        _submit();
+      }
     }
   }
 
