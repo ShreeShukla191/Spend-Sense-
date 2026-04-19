@@ -3,6 +3,7 @@ import 'dashboard/dashboard_screen.dart';
 import 'expenses/expense_screen.dart';
 import 'goals/goal_screen.dart';
 import 'split/group_screen.dart';
+import 'budget/budget_screen.dart';
 import 'analytics/chatbot_screen.dart';
 import 'analytics/investment_screen.dart';
 import 'settings/main_settings_screen.dart';
@@ -89,7 +90,7 @@ class _MainScreenState extends State<MainScreen> {
             ),
             _buildDrawerItem(context, 'Statistics', Icons.show_chart, Colors.cyan),
             _buildDrawerItem(context, 'Planned payments', Icons.update, Colors.orange),
-            _buildDrawerItem(context, 'Budgets', Icons.money, Colors.red),
+            _buildDrawerItem(context, 'Budgets', Icons.money, Colors.red, screen: const BudgetScreen()),
             _buildDrawerItem(context, 'Debts', Icons.money_off, Colors.redAccent),
             _buildDrawerItem(context, 'Goals', Icons.flag_outlined, Colors.cyanAccent, screen: const GoalScreen()),
             _buildDrawerItem(context, 'Shopping lists', Icons.shopping_basket_outlined, Colors.green),

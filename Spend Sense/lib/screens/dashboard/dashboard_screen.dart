@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../settings/main_settings_screen.dart';
+import 'planned_payments_screen.dart';
+import 'shopping_lists_screen.dart';
+import '../analytics/records_screen.dart';
+import '../expenses/account_screen.dart';
+import '../budget/budget_screen.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 import 'package:fl_chart/fl_chart.dart';
-
-
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -51,6 +56,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () {
+              Provider.of<AuthProvider>(context, listen: false).logout();
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.notifications_active, color: Colors.white),
             onPressed: () {},
           )
@@ -76,9 +87,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                             child: const Text('Accounts', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                           ),
-                          const Padding(
-                            padding: EdgeInsets.only(bottom: 8),
-                            child: Text('Budgets & Goals', style: TextStyle(color: Colors.grey, fontSize: 18)),
+                          GestureDetector(
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BudgetScreen())),
+                            child: const Padding(
+                              padding: EdgeInsets.only(bottom: 8),
+                              child: Text('Budgets & Goals', style: TextStyle(color: Colors.grey, fontSize: 18)),
+                            ),
                           ),
                         ],
                       ),
@@ -146,9 +160,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
                         children: [
-                          Expanded(child: _buildActionButton('Account Detail', null)),
+                          Expanded(child: _buildActionButton(context, 'Account Detail', null, const AccountScreen())),
                           const SizedBox(width: 12),
-                          Expanded(child: _buildActionButton('Records', Icons.list)),
+                          Expanded(child: _buildActionButton(context, 'Records', Icons.list, const RecordsScreen())),
                         ],
                       ),
                     ),
@@ -157,9 +171,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
                         children: [
-                          Expanded(child: _buildActionButton('Planned payments', Icons.update, textColor: Colors.white)),
+                          Expanded(child: _buildActionButton(context, 'Planned payments', Icons.update, const PlannedPaymentsScreen(), textColor: Colors.white)),
                           const SizedBox(width: 12),
-                          Expanded(child: _buildActionButton('Shopping lists', Icons.shopping_basket_outlined, textColor: Colors.white)),
+                          Expanded(child: _buildActionButton(context, 'Shopping lists', Icons.shopping_basket_outlined, const ShoppingListsScreen(), textColor: Colors.white)),
                         ],
                       ),
                     ),
@@ -177,23 +191,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildActionButton(String title, IconData? icon, {Color textColor = Colors.white}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF222222),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF333333)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, color: Colors.grey, size: 20),
-            const SizedBox(width: 8),
+  Widget _buildActionButton(BuildContext context, String title, IconData? icon, Widget targetScreen, {Color textColor = Colors.white}) {
+    return GestureDetector(
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => targetScreen)),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF222222),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFF333333)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, color: Colors.grey, size: 20),
+              const SizedBox(width: 8),
+            ],
+            Text(title, style: TextStyle(color: textColor, fontSize: 16)),
           ],
-          Text(title, style: TextStyle(color: textColor, fontSize: 16)),
-        ],
+        ),
       ),
     );
   }

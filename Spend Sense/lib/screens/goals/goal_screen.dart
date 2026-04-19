@@ -17,6 +17,8 @@ class _GoalScreenState extends State<GoalScreen> {
   List<dynamic> _filteredGoals = [];
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
+  String _selectedStatus = 'All';
+  final List<String> _statusOptions = ['All', 'Active', 'Completed', 'Future'];
 
   @override
   void dispose() {
@@ -47,6 +49,18 @@ class _GoalScreenState extends State<GoalScreen> {
     }
   }
 
+  void _applyFilters() {
+    setState(() {
+      _filteredGoals = _goals.where((g) {
+        final name = g['name']?.toString().toLowerCase() ?? '';
+        final matchesSearch = name.contains(_searchController.text.toLowerCase());
+        final status = g['status']?.toString() ?? 'Active';
+        final matchesStatus = _selectedStatus == 'All' || status.toLowerCase() == _selectedStatus.toLowerCase();
+        return matchesSearch && matchesStatus;
+      }).toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,12 +87,7 @@ class _GoalScreenState extends State<GoalScreen> {
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
               ),
               onChanged: (value) {
-                setState(() {
-                  _filteredGoals = _goals.where((g) {
-                    final name = g['name']?.toString().toLowerCase() ?? '';
-                    return name.contains(value.toLowerCase());
-                  }).toList();
-                });
+                _applyFilters();
               },
             ),
           ),
@@ -86,9 +95,35 @@ class _GoalScreenState extends State<GoalScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _filteredGoals.isEmpty
-              ? const Center(child: Text("No goals found."))
-              : ListView.builder(
+          : Column(
+              children: [
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: _statusOptions.map((status) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: ChoiceChip(
+                          label: Text(status),
+                          selected: _selectedStatus == status,
+                          onSelected: (selected) {
+                            if (selected) {
+                              setState(() {
+                                _selectedStatus = status;
+                                _applyFilters();
+                              });
+                            }
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                Expanded(
+                  child: _filteredGoals.isEmpty
+                      ? const Center(child: Text("No goals found."))
+                      : ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: _filteredGoals.length,
               itemBuilder: (context, index) {
@@ -131,6 +166,9 @@ class _GoalScreenState extends State<GoalScreen> {
                 );
               },
             ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(context, MaterialPageRoute(builder: (_) => const AddGoalScreen())).then((_) => _fetchGoals());

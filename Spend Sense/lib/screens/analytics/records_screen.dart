@@ -15,7 +15,8 @@ class _RecordsScreenState extends State<RecordsScreen> {
   List<dynamic> _expenses = [];
   List<dynamic> _incomes = [];
   bool _isLoading = true;
-
+  String _selectedTime = '1 month';
+  final List<String> _timeOptions = ['1 week', '1 month', '12 weeks'];
   @override
   void initState() {
     super.initState();
@@ -64,6 +65,30 @@ class _RecordsScreenState extends State<RecordsScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Master Records'),
+          actions: [
+            DropdownButton<String>(
+              value: _selectedTime,
+              icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+              dropdownColor: const Color(0xFF222222),
+              style: const TextStyle(color: Colors.white),
+              underline: const SizedBox(),
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  setState(() {
+                    _selectedTime = newValue;
+                    _fetchRecords(); // optionally pass filter to backend or filter locally
+                  });
+                }
+              },
+              items: _timeOptions.map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+            ),
+            const SizedBox(width: 16),
+          ],
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Expenses'),
