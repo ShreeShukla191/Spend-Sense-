@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/api_service.dart';
 import 'signup_screen.dart' as signup_screen;
 
 class LoginScreen extends StatefulWidget {
@@ -33,6 +34,46 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _showServerConfigDialog() {
+    final _urlController = TextEditingController(text: ApiService.baseUrl);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Server Configuration'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Enter the backend server URL (e.g., http://192.168.0.174:8000/):'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _urlController,
+              decoration: const InputDecoration(
+                labelText: 'Server URL',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.url,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (_urlController.text.isNotEmpty) {
+                ApiService.setBaseUrl(_urlController.text);
+              }
+              Navigator.pop(context);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,6 +91,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Server Config Button
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: IconButton(
+                          icon: const Icon(Icons.settings, color: Colors.grey),
+                          onPressed: _showServerConfigDialog,
+                          tooltip: 'Configure Server URL',
+                        ),
+                      ),
                       // App logo/title at the top
                       const Icon(Icons.account_balance_wallet, size: 70, color: Color(0xFF2E3192)),
                       const SizedBox(height: 12),

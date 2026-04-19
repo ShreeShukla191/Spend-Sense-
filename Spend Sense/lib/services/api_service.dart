@@ -8,12 +8,17 @@ class ApiService {
   static String _currentBaseUrl = _getDefaultBaseUrl();
 
   static String _getDefaultBaseUrl() {
-    if (kIsWeb) return 'http://localhost:8000/';
-    if (defaultTargetPlatform == TargetPlatform.windows) return 'http://localhost:8000/';
-    return 'http://10.0.2.2:8000/';
+    if (kIsWeb) return 'http://127.0.0.1:8000/';
+    if (defaultTargetPlatform == TargetPlatform.windows) return 'http://127.0.0.1:8000/';
+    return 'http://192.168.0.174:8000/';
   }
 
   static String get baseUrl => _currentBaseUrl;
+
+  static void setBaseUrl(String url) {
+    if (!url.endsWith('/')) url += '/';
+    _currentBaseUrl = url;
+  }
 
   static void switchBaseUrl() {
     if (_currentBaseUrl.contains('localhost')) {
