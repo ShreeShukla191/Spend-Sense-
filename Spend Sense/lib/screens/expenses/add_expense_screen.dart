@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class AddExpenseScreen extends StatefulWidget {
   final Map<String, dynamic>? expenseData;
@@ -22,10 +23,66 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   final List<String> _categoryOptions = ['Food', 'Travel', 'Shopping', 'Bills', 'Others'];
 
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _amountController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
+    _speech = stt.SpeechToText();
+    _descriptionController.addListener(() {
+      _detectCategoryFromText(_descriptionController.text);
+    });
     _fetchCategories();
+  }
+
+  @override
+  void dispose() {
+    if (_isListening) _speech.stop();
+    _descriptionController.dispose();
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  void _detectCategoryFromText(String text) {
+    final lowerText = text.toLowerCase();
+    String detectedCategory = _selectedCategory;
+
+    // Detect Category
+    if (lowerText.contains('food') || lowerText.contains('restaurant') || lowerText.contains('meal') || lowerText.contains('lunch') || lowerText.contains('dinner') || lowerText.contains('breakfast')) {
+      detectedCategory = 'Food';
+    } else if (lowerText.contains('bus') || lowerText.contains('uber') || lowerText.contains('taxi') || lowerText.contains('flight') || lowerText.contains('train') || lowerText.contains('travel') || lowerText.contains('cab')) {
+      detectedCategory = 'Travel';
+    } else if (lowerText.contains('shopping') || lowerText.contains('clothes') || lowerText.contains('shoes') || lowerText.contains('mall')) {
+      detectedCategory = 'Shopping';
+    } else if (lowerText.contains('bill') || lowerText.contains('electricity') || lowerText.contains('water') || lowerText.contains('internet') || lowerText.contains('rent')) {
+      detectedCategory = 'Bills';
+    }
+
+    // Detect Amount
+    bool stateChanged = false;
+    final amountRegExp = RegExp(r'\d+(\.\d+)?');
+    final matches = amountRegExp.allMatches(text);
+    if (matches.isNotEmpty) {
+      final detectedAmount = matches.last.group(0)!;
+      if (_amountController.text.isEmpty || _isListening) {
+        if (_amountController.text != detectedAmount) {
+          _amountController.text = detectedAmount;
+          stateChanged = true;
+        }
+      }
+    }
+
+    if (detectedCategory != _selectedCategory) {
+      _selectedCategory = detectedCategory;
+      stateChanged = true;
+    }
+    
+    if (stateChanged && mounted) {
+      setState(() {});
+    }
   }
 
   void _fetchCategories() async {
@@ -41,6 +98,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         if (widget.expenseData != null) {
           final e = widget.expenseData!;
           _amount = e['amount']?.toString() ?? '';
+          _amountController.text = _amount;
+          if (e['description'] != null) {
+            _descriptionController.text = e['description'].toString();
+          }
           if (e['date'] != null) {
             _selectedDate = DateTime.tryParse(e['date']) ?? DateTime.now();
           }
@@ -77,9 +138,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     
     try {
       // Missing fields logic automatically bypassed with safe defaults
+      final desc = _descriptionController.text.isNotEmpty ? _descriptionController.text : "Quick Add - $_selectedCategory";
+      final amountValue = _amountController.text.isNotEmpty ? _amountController.text : _amount;
       final body = {
-        'amount': _amount,
-        'description': "Quick Add - $_selectedCategory",
+        'amount': amountValue,
+        'description': desc,
         'category': categoryId,
         'payment_mode': "Cash",
         'mood': "Neutral",
@@ -101,13 +164,36 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     }
   }
 
-  void _triggerVoiceInput() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Microphone activated. "Voice-to-Expense" parsing ML module pending backend link...'), 
-        backgroundColor: Colors.blueAccent
-      )
-    );
+  void _triggerVoiceInput() async {
+    if (!_isListening) {
+      bool available = await _speech.initialize(
+        onStatus: (val) {
+          debugPrint('onStatus: $val');
+          if (val == 'done' || val == 'notListening') {
+            if (mounted) setState(() => _isListening = false);
+          }
+        },
+        onError: (val) {
+          debugPrint('onError: $val');
+          if (mounted) setState(() => _isListening = false);
+        },
+      );
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          onResult: (val) => setState(() {
+            _descriptionController.text = val.recognizedWords;
+          }),
+        );
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Speech recognition not available or permission denied.')));
+        }
+      }
+    } else {
+      setState(() => _isListening = false);
+      _speech.stop();
+    }
   }
 
   @override
@@ -133,7 +219,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       const Text('How much did you spend?', style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
                       const SizedBox(height: 16),
                       TextFormField(
-                        initialValue: _amount,
+                        controller: _amountController,
                         textAlign: TextAlign.center,
                         style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.black87),
                         decoration: const InputDecoration(
@@ -147,6 +233,20 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         onSaved: (val) => _amount = val!,
                       ),
                       const SizedBox(height: 48),
+
+                      // Description Field
+                      const Text('Description', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _descriptionController,
+                        decoration: InputDecoration(
+                          hintText: 'Enter description or use voice',
+                          filled: true,
+                          fillColor: Colors.grey.shade100,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
 
                       // Category Dropdown
                       const Text('Category', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
@@ -200,15 +300,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                             width: 80,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: const LinearGradient(colors: [Colors.blueAccent, Colors.lightBlue]),
-                              boxShadow: [BoxShadow(color: Colors.blue.withValues(alpha: 0.3), blurRadius: 15, spreadRadius: 5)],
+                              gradient: LinearGradient(colors: _isListening ? [Colors.redAccent, Colors.red] : [Colors.blueAccent, Colors.lightBlue]),
+                              boxShadow: [BoxShadow(color: _isListening ? Colors.red.withValues(alpha: 0.3) : Colors.blue.withValues(alpha: 0.3), blurRadius: 15, spreadRadius: 5)],
                             ),
-                            child: const Icon(Icons.mic, color: Colors.white, size: 40),
+                            child: Icon(_isListening ? Icons.stop : Icons.mic, color: Colors.white, size: 40),
                           ),
                         ),
                       ),
                       const SizedBox(height: 16),
-                      const Text('Tap to use Voice Add', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                      Text(_isListening ? 'Listening...' : 'Tap to use Voice Add', textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
                       
                       const SizedBox(height: 48),
 
