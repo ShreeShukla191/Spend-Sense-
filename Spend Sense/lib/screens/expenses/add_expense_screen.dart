@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'bill_scanner_screen.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   final Map<String, dynamic>? expenseData;
@@ -215,6 +216,40 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     }
   }
 
+  void _navigateToBillScanner() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const BillScannerScreen()),
+    );
+    
+    if (result != null && result is Map) {
+      setState(() {
+        if (result['amount'] != null && result['amount'].isNotEmpty && result['amount'] != 'No amount detected') {
+           _amount = result['amount'];
+           _amountController.text = result['amount'];
+        }
+        if (result['date'] != null && result['date'].isNotEmpty) {
+           final parsedDate = DateTime.tryParse(result['date']);
+           if (parsedDate != null) _selectedDate = parsedDate;
+        }
+        if (result['category'] != null && result['category'].isNotEmpty) {
+           if (_categoryOptions.contains(result['category'])) {
+               _selectedCategory = result['category'];
+           }
+        }
+        if (result['rawText'] != null && _descriptionController.text.isEmpty) {
+           _descriptionController.text = "Scanned Bill";
+        }
+      });
+    } else if (result != null && result is String) {
+      setState(() {
+        _amount = result;
+        _amountController.text = result;
+      });
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -309,25 +344,38 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       
                       const SizedBox(height: 48),
 
-                      // Voice Input
-                      Center(
-                        child: InkWell(
-                          onTap: _triggerVoiceInput,
-                          borderRadius: BorderRadius.circular(50),
-                          child: Container(
-                            height: 80,
-                            width: 80,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(colors: _isListening ? [Colors.redAccent, Colors.red] : [Colors.blueAccent, Colors.lightBlue]),
-                              boxShadow: [BoxShadow(color: _isListening ? Colors.red.withValues(alpha: 0.3) : Colors.blue.withValues(alpha: 0.3), blurRadius: 15, spreadRadius: 5)],
+                      // Voice and Scanner Input
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: _triggerVoiceInput,
+                              icon: Icon(_isListening ? Icons.stop : Icons.mic, color: Colors.white),
+                              label: Text(_isListening ? 'Listening...' : 'Voice', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _isListening ? Colors.redAccent : Colors.blueAccent,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                elevation: 2,
+                              ),
                             ),
-                            child: Icon(_isListening ? Icons.stop : Icons.mic, color: Colors.white, size: 40),
                           ),
-                        ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: _navigateToBillScanner,
+                              icon: const Icon(Icons.document_scanner, color: Colors.white),
+                              label: const Text('Scan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.deepPurple,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                elevation: 2,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 16),
-                      Text(_isListening ? 'Listening...' : 'Tap to use Voice Add', textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
                       
                       const SizedBox(height: 48),
 
